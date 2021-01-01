@@ -1,0 +1,97 @@
+version: '3.7'
+
+services:
+  backend: &backend
+    build:
+      context: .
+      dockerfile: ./dockerfiles/backend/Dockerfile.local
+    volumes:
+      - ./:/var/www/backend:cached
+      - bundle:/bundle:cached
+      - /var/www/backend/log
+      - ./tmp:/var/www/backend/tmp
+      - /var/www/backend/vendor
+    links:
+      - mysql
+      - minio
+    depends_on:
+      - mysql
+      - minio
+    command: bash -c "/var/www/backend/services.local.sh"
+    environment:
+      WEBPACKER_DEV_SERVER_HOST: backend-webpacker
+
+  backend-webpacker:
+    <<: *backend
+    environment:
+      NODE_ENV: development
+      RAILS_ENV: development
+      WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+    command: bash -c "bundle install && bin/webpack-dev-server"
+    depends_on:
+      - backend
+    ports:
+      - 3035:3035
+
+  mysql:
+    image: mysql:5.7.28
+    ports:
+      - 127.0.0.1:${MYSQL_HOST_PORT}:3306
+    environment:
+      MYSQL_USER: 'root'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - ./docker/mysql/conf.d:/etc/mysql
+      - ./docker/mysql/var/lib:/var/lib/mysql
+
+  nginx:
+    image: nginx:1.17.5
+    volumes:
+      - ./docker/nginx/conf.d.local:/etc/nginx/conf.d/
+    ports:
+      - 127.0.0.1:80:80
+    links:
+      - backend
+    depends_on:
+      - backend
+
+  redis:
+    image: redis:5.0.6
+    ports:
+      - ${REDIS_HOST_PORT}:6379
+    volumes:
+      - ./docker/redis/data:/data
+
+  minio:
+    image: minio/minio
+    hostname: dev
+    ports:
+      - ${MINIO_HOST_PORT}:9000
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    entrypoint: sh
+    command: >
+      -c "
+      mkdir -p /data/.minio.sys/buckets;
+      cp -r /policies/* /data/.minio.sys/;
+      cp -r /export/* /data/;
+      find /data -name '.DS_Store' -type f -delete;
+      find /data -name '.gitkeep' -type f -delete;
+      /usr/bin/minio server /data;
+      "
+    volumes:
+      - ./docker/minio/data:/data
+      - ./docker/minio/export:/export
+      - ./docker/minio/config:/root/.minio
+      - ./docker/minio/policies:/policies
+
+  mailcatcher:
+    image: schickling/mailcatcher
+    ports:
+      - 127.0.0.1:${MAILCATCHER_SMTP_PORT}:1025
+      - 127.0.0.1:${MAILCATCHER_BROWSER_PORT}:1080
+
+volumes:
+  bundle:
+    driver: local
