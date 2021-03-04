@@ -1,0 +1,8 @@
+mail:
+  to:
+    for_failed_fax: <%= ENV['EMAILS_FOR_FAILED_FAX'] %>
+test:
+  test2:
+    test3_test4: <%= ENV['MAILER_SENDER'] %>
+aaaa: cccc
+bbbb: <%= ENV['MAILER_SENDER'] %>

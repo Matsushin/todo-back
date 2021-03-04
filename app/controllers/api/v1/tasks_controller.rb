@@ -2,6 +2,9 @@ class Api::V1::TasksController < Api::V1::ApplicationController
   before_action :set_task, only: %i[update show destroy]
 
   def index
+    Rails::logger::debug('==========')
+    Rails::logger::debug(Settings.mail.to.for_failed_fax)
+    Rails::logger::debug(Settings)
     tasks = Task.order(created_at: :desc)
     render json: tasks.to_json
   end
