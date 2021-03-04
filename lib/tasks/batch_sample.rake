@@ -12,5 +12,11 @@ namespace :batch_sample do
     Rails::logger::debug(Settings)
     Rails::logger::debug(Settings.aaaa)
     Rails::logger::debug(Settings.test.test2.test3_test4)
+    p emails_for_failed_fax
+  end
+
+  def emails_for_failed_fax
+    email_text = Settings.mail.to.for_failed_fax
+    email_text&.split(',')&.map(&:strip)
   end
 end
