@@ -56,22 +56,22 @@ jobs:
           name: Setup db
           command: docker-compose exec backend rails db:create db:migrate
 
-      - run:
-          name: Run tests
-          command: |
-            mkdir /tmp/test-results
-            docker-compose exec backend bundle exec rspec --format progress \
-              --format RspecJunitFormatter \
-              --out /tmp/test-results/rspec.xml
+#      - run:
+#          name: Run tests
+#          command: |
+#            mkdir /tmp/test-results
+#            docker-compose exec backend bundle exec rspec --format progress \
+#              --format RspecJunitFormatter \
+#              --out /tmp/test-results/rspec.xml
 
       # TODO: machine executor のせいか現状出力されない
       - store_test_results:
           path: /tmp/test-results
 
-      - slack/status:
-          fail_only: true
-          # mentions: "here"
-          # only_for_branches: 'master'
+#      - slack/status:
+#          fail_only: true
+#          # mentions: "here"
+#          # only_for_branches: 'master'
 
       - run:
           name: docker-compose down
