@@ -30,8 +30,6 @@ RUN apk upgrade && \
     zlib \
     zlib-dev
 
-RUN gem install bundler
-RUN gem update
 RUN npm install -g yarn
 
 WORKDIR /var/www/backend
